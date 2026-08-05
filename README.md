@@ -112,6 +112,14 @@ python scripts/make_dashboard.py
 python scripts/make_dashboard.py --standalone
 ```
 
+效果示意（2026-08-05 晚班数据）：
+
+![看板概览：KPI 与栏目分布](assets/dashboard-overview.png)
+
+![看板详情：中标单位与中标价高亮](assets/dashboard-detail.png)
+
+> 截图仅作展示。实际面板内容会随 `config/user-config.json` 的过滤关键词与 `scripts/memory/zsjypt_tracking.json` 的追踪设置动态变化。
+
 ## ⏰ 自动化（WorkBuddy）
 
 WorkBuddy 自动化已部署两个班次（工作日 ACTIVE）：
