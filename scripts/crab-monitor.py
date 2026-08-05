@@ -38,6 +38,10 @@ SOURCE_ORDER = {s['name']: i for i, s in enumerate(SOURCES)}
 MEMORY_DIR = 'memory'
 os.makedirs(MEMORY_DIR, exist_ok=True)
 
+# 用户私有配置（首次 init 生成，已被 .gitignore 排除，不提交）
+HERE = os.path.dirname(os.path.abspath(__file__))
+USER_CONFIG_PATH = os.path.normpath(os.path.join(HERE, '..', 'config', 'user-config.json'))
+
 
 def _c(t):
     return ' '.join((t or '').split())
@@ -180,6 +184,39 @@ def check_updates(all_projects):
     return updates
 
 
+# ---------- 用户配置（首轮 init 生成，私有不提交）----------
+
+def load_user_config():
+    """读取 config/user-config.json（用户的过滤项与追踪关键词）；缺失或损坏返回 {}。"""
+    if os.path.exists(USER_CONFIG_PATH):
+        try:
+            with open(USER_CONFIG_PATH, encoding='utf-8') as fh:
+                d = json.load(fh)
+                return d if isinstance(d, dict) else {}
+        except Exception:
+            pass
+    return {}
+
+
+def init_config(all_projects):
+    """首次配置引导：交互式收集用户自己的过滤项与追踪关键词，写入 user-config.json。"""
+    print('=== 首次配置：设置你自己的监控过滤项与追踪关键词 ===')
+    print('（配置保存在 config/user-config.json，已被 .gitignore 排除，不会上传，可放心填写私人关键词）')
+    kw = input('过滤关键词（普通汇报只报标题含这些词的项目，逗号分隔，如 勘察,设计,监理；留空=全量汇报）：').strip()
+    tt = input('追踪关键词（全文匹配你关注的投标方/公司名，逗号分隔，可留空）：').strip()
+    keywords = [k.strip() for k in kw.split(',') if k.strip()]
+    track_terms = [t.strip() for t in tt.split(',') if t.strip()]
+    cfg = {'keywords': keywords, 'track_terms': track_terms}
+    os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
+    with open(USER_CONFIG_PATH, 'w', encoding='utf-8') as fh:
+        json.dump(cfg, fh, ensure_ascii=False, indent=2)
+    print(f'✅ 已写入 {USER_CONFIG_PATH}')
+    for t in track_terms:
+        add_track(t, all_projects)
+        print(f'  追踪关键词：{t}')
+    print('完成。之后直接运行 `python scripts/crab-monitor.py` 即按你的配置汇报。')
+
+
 # ---------- 班次 ----------
 
 def get_shift():
@@ -268,6 +305,9 @@ def main():
     # 子命令
     if args:
         cmd = args[0].strip().lower()
+        if cmd == 'init':
+            init_config(all_projects)
+            return
         if cmd in ('track', '-t') and len(args) >= 2:
             term = _c(' '.join(args[1:]))
             ok = add_track(term, all_projects)
@@ -291,6 +331,22 @@ def main():
 
     today = datetime.now().strftime('%Y-%m-%d')
     today_items = [p for p in all_projects if p['date'] == today]
+
+    # 加载用户私有配置（首轮 init 生成）；按 keywords 过滤普通汇报，并同步追踪关键词
+    user_cfg = load_user_config()
+    keywords = user_cfg.get('keywords', [])
+    track_terms = user_cfg.get('track_terms', [])
+    if not user_cfg:
+        print('⚠ 未检测到 config/user-config.json：运行 `python scripts/crab-monitor.py init` 配置你自己的过滤项与追踪关键词（本次按全量汇报）。')
+    if keywords:
+        today_items = [p for p in today_items
+                       if any(k in (p.get('title') or '') for k in keywords)]
+    if track_terms:
+        existing = set(list_tracks())
+        for t in track_terms:
+            if t not in existing:
+                add_track(t, all_projects)
+                existing.add(t)
 
     # 抓中标详情（对所有中标信息条目持久化：优先复用历史快照，避免重复抓取）
     prev_map = {p.get('key'): p for p in load_last() if isinstance(p, dict)}

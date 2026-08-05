@@ -19,7 +19,7 @@ triggers:
 
 - `scripts/crab-monitor.py` 是唯一实现与唯一事实源；`scripts/make_dashboard.py` 仅做展示层。
 - Agent 不得擅自摘要、改写、重排、合并分类或补造项目；脚本输出即事实。
-- 普通汇报覆盖**当日全部栏目**新增（脚本当前不过滤设计/勘察，全量汇报）。
+- 普通汇报覆盖**当日**新增；若 `config/user-config.json` 设了 `keywords`，只报标题含这些词的项目（如 勘察/设计/监理），否则全量汇报。
 - 追踪项目按关键词全文匹配，覆盖全部来源与全部类型。
 - 自动化最终响应必须原样返回脚本 stdout / 仪表盘状态；不要写二次确认或摘要。
 
@@ -133,14 +133,21 @@ python notify.py --guide     # 弹出配置引导：说明三个平台如何获�
 
 ```bash
 cd scripts
-python crab-monitor.py track 中誉        # 添加关注
-python crab-monitor.py untrack 中誉       # 移除关注
+python crab-monitor.py track 示例公司      # 添加关注
+python crab-monitor.py untrack 示例公司     # 移除关注
 python crab-monitor.py list               # 查看关注列表
 ```
 
 追踪：添加关键词后，只要该关键词下有新公告（任何栏目），报告的「关注项目更新」部分高亮显示。内部用 `zsjypt_tracking.json` 记录已见 key，增量对比。
 
-当前已初始化（与 WSL 版一致）：**中联合创、广东行远、深圳华粤、中誉**。
+追踪关键词在**首次配置时由你设定**，保存在私有配置（`config/user-config.json`，已被 .gitignore 排除，不随仓库公开）：
+
+```bash
+cd scripts
+python crab-monitor.py init      # 交互式填写你的过滤关键词 + 追踪公司名，自动写入 user-config.json 并建追踪
+```
+
+也可把 `config/user-config.example.json` 复制为 `config/user-config.json` 直接填写（`keywords`=普通汇报过滤项，`track_terms`=追踪关键词）。首次运行若缺该文件，脚本会提示并以全量汇报降级，不阻塞自动化。
 
 ## 自动化（已部署 · 工作日 ACTIVE）
 

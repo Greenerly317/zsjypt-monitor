@@ -16,9 +16,10 @@ __pycache__/
 *.log
 .env
 
-# ===== 凭据配置（保留模板 notify.example.json，勿提交真实 webhook）=====
+# ===== 凭据与用户私有配置（保留模板，勿提交真实 webhook / 私人关键词）=====
 config/feishu.json
 config/notify.json
+config/user-config.json
 
 # ===== 调试 / 实验脚本（保留在磁盘，不纳入版本控制）=====
 scripts/debug_*.py

@@ -7,7 +7,7 @@
 ## ✨ 功能特性
 
 - **全栏目增量检测**：每次运行对比上次快照（`scripts/memory/zsjypt_last.json`），识别新增项目，按 ID 去重。
-- **关键词追踪**：对全部栏目做全文匹配，命中即预警。内置关注词：中联合创、广东行远、深圳华粤、中誉（可用 `track` / `untrack` 动态维护）。
+- **关键词追踪**：对全部栏目做全文匹配，命中即预警。关注词在首次配置（`init`）时由你自定义，保存在 `config/user-config.json`（私有，不提交）；也可用 `track` / `untrack` 动态维护。
 - **多平台推送**：`notify.py` 统一适配飞书 / 企业微信 / 钉钉群机器人报文，填入 Webhook 即启用，留空自动跳过。
 - **可视化看板**：`make_dashboard.py` 生成实时看板（`reports/live/dashboard.html`），可一键导出单文件分享版。
 - **自动化班次**：WorkBuddy 自动化在工作日午班（12:00）、晚班（18:00）自动运行；晚班是有效汇报窗口（平台新条目多集中在 14:00–17:30）。
@@ -76,9 +76,9 @@ python scripts/crab-monitor.py
 示例：
 
 ```bash
-python scripts/crab-monitor.py track 中联合创
+python scripts/crab-monitor.py track 示例公司
 python scripts/crab-monitor.py list
-python scripts/crab-monitor.py untrack 中联合创
+python scripts/crab-monitor.py untrack 示例公司
 ```
 
 > 普通汇报当前为全量新增（不过滤设计/勘察），追踪则覆盖全部项目类型，二者互补。
