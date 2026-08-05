@@ -1,0 +1,15 @@
+{
+  "feishu": {
+    "webhook": "（请填入飞书自定义机器人 Webhook，形如 https://open.feishu.cn/open-apis/bot/v2/hook/xxxx）",
+    "secret": ""
+  },
+  "wecom": {
+    "webhook": "（请填入企业微信群机器人 Webhook，即「推到微信」，形如 https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxx）",
+    "secret": ""
+  },
+  "dingtalk": {
+    "webhook": "（请填入钉钉自定义机器人 Webhook，形如 https://oapi.dingtalk.com/robot/send?access_token=xxxx）",
+    "secret": ""
+  },
+  "note": "把对应平台 webhook 替换为真实地址即可启用推送；保留占位符或留空则自动跳过该平台。钉钉/飞书开启加签时填 secret。也可用环境变量 ZS_NOTIFY_FEISHU / ZS_NOTIFY_WECOM / ZS_NOTIFY_DINGTALK 覆盖。notify.py 自动适配各平台报文格式，无需改动逻辑。"
+}

@@ -1,0 +1,56 @@
+{
+  "platform": {
+    "name": "中山市公共资源交易平台",
+    "base_url": "https://www.zsjypt.cn",
+    "monitor_url": "https://www.zsjypt.cn/subItem/58",
+    "categories": ["建设工程", "政府采购"],
+    "keywords": [],
+    "parser": {
+      "type": "html",
+      "table_selector": "table.projects",
+      "row_selector": "tbody tr",
+      "columns": {
+        "title": 0,
+        "category": 1,
+        "publish_time": 2,
+        "url": 3
+      }
+    }
+  },
+  "schedule": {
+    "shifts": [
+      {
+        "name": "早班",
+        "time": "08:30",
+        "description": "上班前检查"
+      },
+      {
+        "name": "午班",
+        "time": "12:00",
+        "description": "中午检查"
+      },
+      {
+        "name": "晚班",
+        "time": "20:30",
+        "description": "下班后检查"
+      }
+    ]
+  },
+  "notification": {
+    "enabled": true,
+    "method": "feishu",
+    "notify_on_new": true,
+    "notify_on_error": true,
+    "daily_summary": false
+  },
+  "storage": {
+    "memory_dir": "~/.workbuddy/skills/zhongshan-monitor/memory",
+    "archive_dir": "~/.workbuddy/skills/zhongshan-monitor/memory/archive",
+    "log_dir": "~/.workbuddy/skills/zhongshan-monitor/logs"
+  },
+  "retry": {
+    "enabled": true,
+    "max_attempts": 3,
+    "backoff_seconds": 5
+  }
+}

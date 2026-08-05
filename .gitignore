@@ -1,0 +1,48 @@
+# ===== WorkBuddy 内部数据（记忆 / 配置 / 运行态）=====
+.workbuddy/
+
+# ===== 运行时数据与快照（非源码，由脚本生成）=====
+memory/
+scripts/memory/
+reports/
+archive/
+daily_report_*.txt
+
+# ===== Python 缓存与临时文件 =====
+__pycache__/
+*.pyc
+*.pyo
+*.tmp
+*.log
+.env
+
+# ===== 凭据配置（保留模板 notify.example.json，勿提交真实 webhook）=====
+config/feishu.json
+config/notify.json
+
+# ===== 调试 / 实验脚本（保留在磁盘，不纳入版本控制）=====
+scripts/debug_*.py
+scripts/find_*.py
+scripts/analyze_page.py
+scripts/check_api.py
+scripts/parse_api.py
+scripts/call_pagelist.py
+scripts/real_crawler.py
+scripts/final_monitor.py
+scripts/final_monitor_v2.py
+scripts/generate_daily_report.py
+scripts/demo.py
+scripts/feishu_notifier.py
+scripts/feishu_sender.py
+
+# ===== 根目录遗留旧脚本（已被 scripts/ 中新版取代）=====
+daily_report.py
+daily_scheduler.py
+run_monitoring.py
+run.py
+init.py
+query.py
+track_changes.py
+tracking.py
+openclaw_agent.py
+demo.py
