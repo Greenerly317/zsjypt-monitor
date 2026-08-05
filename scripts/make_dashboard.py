@@ -10,6 +10,7 @@
 用法：
   python make_dashboard.py                 # 更新 reports/live/ 的 data.js（外壳缺失时一并创建）
   python make_dashboard.py --standalone    # 额外生成一份自包含的单文件 HTML（用于分享/预览）
+  python make_dashboard.py --rebuild       # 强制重建 dashboard.html 外壳（模板更新后同步用）
   python make_dashboard.py 2026-07-29       # 指定日期（默认今天）
 """
 import os, sys, json
@@ -86,7 +87,7 @@ h1{font-size:24px;font-weight:700}
   <div class="panel"><h2>栏目分布</h2><div class="bars" id="bars"></div></div>
   <div class="panel"><h2>今日新挂网清单</h2><div id="groups"></div></div>
   <div class="panel"><h2>关注公司追踪</h2><div class="track-sec" id="tracking"></div></div>
-  <div class="foot">由 crab-monitor.py + make_dashboard.py 生成 · 自动化定时（工作日 12:00 / 18:00）· 飞书未配置</div>
+  <div class="foot" id="foot"></div>
 </div>
 <script src="dashboard-data.js"></script>
 <script>
@@ -94,7 +95,8 @@ function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 function render(d){
   if(!d||d.error){document.getElementById('meta').textContent='数据未加载（请确认 dashboard-data.js 与本页面同目录）';return;}
   document.getElementById('shift').textContent=d.shift||'';
-  document.getElementById('meta').textContent=d.date+' · 数据来源 zsjypt.cn · 14 栏目全量监控';
+  document.getElementById('meta').textContent=d.date+' · 数据来源 zsjypt.cn · '+d.scope;
+  document.getElementById('foot').textContent='由 crab-monitor.py + make_dashboard.py 生成 · 自动化定时（工作日 12:00 / 18:00）· '+d.push;
   var k=document.getElementById('kpis');
   k.innerHTML=
     '<div class="kpi"><div class="num">'+d.total+'</div><div class="lbl">今日新增项目</div></div>'+
@@ -154,6 +156,21 @@ def get_shift():
     return '晚班 18:00'
 
 
+def _push_status():
+    """探测已启用的推送平台（飞书/企业微信/钉钉），返回展示文案。"""
+    try:
+        import notify as _notify
+        cfg = _notify.load_config()
+        names = {'feishu': '飞书', 'wecom': '企业微信', 'dingtalk': '钉钉'}
+        enabled = [names.get(n, n) for n in _notify.PLATFORMS
+                   if str(cfg.get(n, {}).get('webhook', '')).lower().startswith('http')]
+        if enabled:
+            return '推送：' + '/'.join(enabled)
+    except Exception:
+        pass
+    return '推送未配置'
+
+
 def build_data(date_str, cm):
     all_projects = cm.load_last()
     if not all_projects:
@@ -161,7 +178,20 @@ def build_data(date_str, cm):
         for src in cm.SOURCES:
             all_projects.extend(cm.fetch_source(src))
 
-    today_items = [p for p in all_projects if p.get('date') == date_str]
+    # 全量当日条目：用于追踪统计（追踪与关键词过滤相互独立）
+    today_all = [p for p in all_projects if p.get('date') == date_str]
+
+    # 用户私有过滤项：与 crab-monitor.py 的 init 配置保持一致
+    user_cfg = cm.load_user_config()
+    keywords = user_cfg.get('keywords', []) or []
+    if keywords:
+        today_items = [p for p in today_all
+                       if any(k in (p.get('title') or '') for k in keywords)]
+        scope = '已按关键词过滤：' + '/'.join(keywords)
+    else:
+        today_items = today_all
+        scope = '全量监控（未设置关键词过滤）'
+
     grouped = {}
     for p in today_items:
         grouped.setdefault(p['source'], []).append(p)
@@ -184,12 +214,15 @@ def build_data(date_str, cm):
     bars = [{'name': n, 'cnt': c} for n, c in counts]
 
     tracking = cm.load_tracking().get('terms', {})
-    track_list = [{'term': t, 'cnt': sum(1 for p in today_items if t in (p.get('title') or ''))}
+    track_list = [{'term': t, 'cnt': sum(1 for p in today_all if t in (p.get('title') or ''))}
                   for t in sorted(tracking.keys())]
 
     return {
         'date': date_str,
         'shift': get_shift(),
+        'scope': scope,
+        'push': _push_status(),
+        'keywords': keywords,
         'total': len(today_items),
         'cats': len(grouped),
         'track_new': sum(x['cnt'] for x in track_list),
@@ -206,6 +239,7 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     date_str = args[0] if args else datetime.now().strftime('%Y-%m-%d')
     standalone = '--standalone' in sys.argv
+    rebuild = '--rebuild' in sys.argv
 
     data = build_data(date_str, cm)
 
@@ -213,9 +247,9 @@ def main():
     # 只更新数据文件（面板外壳不变）
     with open(os.path.join(LIVE_DIR, 'dashboard-data.js'), 'w', encoding='utf-8') as f:
         f.write('window.DASHBOARD_DATA = ' + json.dumps(data, ensure_ascii=False) + ';')
-    # 外壳仅缺时创建
+    # 外壳仅缺时创建；--rebuild 时强制重建（用于外壳模板更新后同步）
     shell_path = os.path.join(LIVE_DIR, 'dashboard.html')
-    if not os.path.exists(shell_path):
+    if rebuild or not os.path.exists(shell_path):
         with open(shell_path, 'w', encoding='utf-8') as f:
             f.write(SHELL_HTML)
 
