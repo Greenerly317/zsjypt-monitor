@@ -20,24 +20,25 @@ zsjypt-monitor/
 ├── .gitignore
 ├── LICENSE                 # MIT
 ├── README.md
+├── CHANGELOG.md
+├── requirements.txt        # requests + beautifulsoup4
+├── skill.md                # WorkBuddy skill 定义（frontmatter + 用法）
 ├── config/
-│   ├── platform-config.json    # 平台与栏目配置（非敏感，已入版本库）
-│   ├── notify.example.json     # 推送配置模板（复制为 notify.json 后填 Webhook）
-│   └── feishu.json             # 旧版飞书配置（已弃用，不提交）
+│   ├── notify.example.json      # 推送配置模板（复制为 notify.json 后填 Webhook）
+│   └── user-config.example.json # 用户私有配置模板（复制为 user-config.json 填关键词）
 ├── scripts/
 │   ├── crab-monitor.py     # 主脚本：抓取 + 增量 + 追踪 + 汇报
 │   ├── notify.py           # 多平台推送（飞书/企业微信/钉钉）
 │   ├── make_dashboard.py   # 可视化看板生成
-│   ├── tracking_manager.py # 追踪关键词管理
-│   ├── cron_handler.py     # 自动化班次入口
-│   ├── api.py / crawler.py / fetch_platform.py / monitor.py
-│   ├── run_monitor.py / run_full_monitor.py
-│   ├── memory/             # 运行时快照（不提交）
-│   │   ├── zsjypt_last.json       # 全量项目快照
-│   │   └── zsjypt_tracking.json   # 追踪关键词状态
-│   └── ...（其余为调试/实验脚本，已 gitignore）
-├── reports/                # 生成的报告与看板（不提交）
-└── memory/                 # 旧版运行时数据（不提交，已 gitignore）
+│   ├── doctor.py           # 环境自检（离线）
+│   └── memory/             # 运行时快照（不提交）
+│       ├── zsjypt_last.json       # 全量项目快照
+│       └── zsjypt_tracking.json   # 追踪关键词状态
+├── references/             # skill 详细文档（按需加载）
+│   ├── columns.md          # 14 栏目与抓取机制
+│   ├── deploy.md           # CloudStudio 部署
+│   └── notify.md           # 推送配置详解
+└── reports/                # 生成的看板（不提交）
 ```
 
 ## 🧰 环境要求
@@ -46,8 +47,10 @@ zsjypt-monitor/
 - 依赖：`requests`、`beautifulsoup4`
 
 ```bash
-pip install requests beautifulsoup4
+pip install -r requirements.txt
 ```
+
+运行前可用 `python scripts/doctor.py` 做离线环境自检（依赖 / 配置 / 推送状态，密钥绝不打印）。
 
 ## 🚀 快速开始
 
@@ -127,9 +130,11 @@ WorkBuddy 自动化已部署两个班次（工作日 ACTIVE）：
 | `scripts/memory/zsjypt_last.json` | 全量项目快照（每次运行更新，去重基线） | 否（运行时生成） |
 | `scripts/memory/zsjypt_tracking.json` | 追踪关键词及已知命中基线 | 否 |
 | `reports/` | 历次报告与看板 HTML | 否 |
-| `memory/`（根目录） | 旧版运行时数据 | 否 |
-| `config/platform-config.json` | 平台栏目配置 | 是 |
+| `config/notify.json` | 推送配置（真实 Webhook） | 否（私有） |
+| `config/user-config.json` | 用户过滤关键词 + 追踪词 | 否（私有） |
 | `config/notify.example.json` | 推送配置模板 | 是 |
+| `config/user-config.example.json` | 用户配置模板 | 是 |
+| `references/` | skill 详细文档（按需加载） | 是 |
 
 ## ⚠️ 注意事项
 
